@@ -12,18 +12,16 @@ const PUBLIC = [
   /^\/favicon\.ico$/,
 ];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (PUBLIC.some((r) => r.test(pathname))) return NextResponse.next();
 
-  // x-api-secret bypass for programmatic access
   const apiSecret = process.env.API_SECRET;
   if (apiSecret && req.headers.get("x-api-secret") === apiSecret) {
     return NextResponse.next();
   }
 
-  // CRON_SECRET bypass
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
     const bearer = req.headers.get("authorization");
