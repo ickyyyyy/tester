@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Panel } from "./Panel";
 
 interface FinanceSnapshot {
@@ -16,6 +17,8 @@ interface FinanceSnapshot {
 const FALLBACK_SPARK = [0.3, 0.38, 0.34, 0.50, 0.46, 0.60, 0.55, 0.68, 0.64, 0.78, 0.74, 0.90];
 
 export function FinancePulseCard({ data }: { data?: FinanceSnapshot | null }) {
+  const [blurred, setBlurred] = useState(false);
+
   const fmt = (n: number) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -41,16 +44,27 @@ export function FinancePulseCard({ data }: { data?: FinanceSnapshot | null }) {
     <Panel>
       <div className="flex items-start justify-between">
         <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--ink-3)" }}>Net Worth</p>
-        {nw != null && (
-          <span
-            className="text-[9px] font-bold px-1.5 py-0.5 rounded"
-            style={{ background: "var(--ok)", color: "var(--ink-0)" }}
+        <div className="flex items-center gap-1.5">
+          {nw != null && (
+            <span
+              className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+              style={{ background: "var(--ok)", color: "var(--ink-0)" }}
+            >
+              ▲ LIVE
+            </span>
+          )}
+          <button
+            onClick={() => setBlurred(b => !b)}
+            title={blurred ? "Show numbers" : "Hide numbers"}
+            className="text-[11px] leading-none"
+            style={{ color: "var(--ink-3)" }}
           >
-            ▲ LIVE
-          </span>
-        )}
+            {blurred ? "👁" : "🙈"}
+          </button>
+        </div>
       </div>
 
+      <div style={{ filter: blurred ? "blur(8px)" : "none", transition: "filter 0.2s", userSelect: blurred ? "none" : "auto" }}>
       <p className="num text-2xl font-bold" style={{ color: nw != null ? "var(--ok)" : "var(--ink-2)" }}>
         {nw != null ? fmt(nw) : "—"}
       </p>
@@ -86,9 +100,11 @@ export function FinancePulseCard({ data }: { data?: FinanceSnapshot | null }) {
         ))}
       </div>
 
+      </div>
+
       {!data && (
         <p className="text-[10px]" style={{ color: "var(--ink-3)" }}>
-          No snapshot — trigger the finance cron to populate.
+          No snapshot — connect a Google Sheet to populate.
         </p>
       )}
     </Panel>
