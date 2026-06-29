@@ -35,11 +35,25 @@ export function OperatorCard() {
     <Panel accent>
       {/* Avatar + status */}
       <div className="flex items-center gap-3">
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 border-2"
-          style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--ink-1)" }}
-        >
-          {OPERATOR.name[0]}
+        <div className="relative shrink-0">
+          <img
+            src="/avatar.jpg"
+            alt={OPERATOR.name}
+            className="w-12 h-12 rounded-full object-cover border-2"
+            style={{ borderColor: "var(--accent)" }}
+            onError={(e) => {
+              const el = e.currentTarget;
+              el.style.display = "none";
+              const fallback = el.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = "flex";
+            }}
+          />
+          <div
+            className="w-12 h-12 rounded-full items-center justify-center text-lg font-bold border-2 hidden"
+            style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--ink-1)" }}
+          >
+            {OPERATOR.name[0]}
+          </div>
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-0.5">
