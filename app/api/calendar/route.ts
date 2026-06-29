@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getValidAccessToken } from "@/lib/google-calendar";
+import { adminClient } from "@/lib/supabase";
+import { OPERATOR } from "@/lib/config/operator";
 
 export interface CalEvent {
   id: string;
@@ -11,12 +13,40 @@ export interface CalEvent {
   description?: string;
 }
 
+const CACHE_DATE = "2000-01-04";
+
 function dateWindow() {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const weekEnd = new Date(todayStart);
   weekEnd.setDate(todayStart.getDate() + 7);
   return { todayStart, weekEnd };
+}
+
+async function fetchFromCache(): Promise<CalEvent[] | null> {
+  try {
+    const db = adminClient();
+    const { data } = await db
+      .from("daily_logs")
+      .select("notes")
+      .eq("user_id", OPERATOR.userId)
+      .eq("log_date", CACHE_DATE)
+      .maybeSingle();
+    if (!data?.notes) return null;
+    const parsed = JSON.parse(data.notes as string);
+    const events: CalEvent[] = parsed.events ?? [];
+    // Filter to current week window
+    const { todayStart, weekEnd } = dateWindow();
+    return events
+      .filter((ev) => {
+        const start = new Date(ev.start);
+        const end = new Date(ev.end);
+        return end >= todayStart && start <= weekEnd;
+      })
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  } catch {
+    return null;
+  }
 }
 
 async function fetchViaGoogleAPI(token: string): Promise<CalEvent[]> {
@@ -95,14 +125,20 @@ async function fetchViaIcal(icalUrl: string): Promise<CalEvent[]> {
 
 export async function GET() {
   try {
-    // Try Google OAuth first
+    // 1. Try MCP-synced cache in Supabase
+    const cached = await fetchFromCache();
+    if (cached !== null) {
+      return NextResponse.json({ events: cached, source: "cache" });
+    }
+
+    // 2. Try Google OAuth
     const token = await getValidAccessToken();
     if (token) {
       const events = await fetchViaGoogleAPI(token);
       return NextResponse.json({ events, source: "google" });
     }
 
-    // Fall back to iCal
+    // 3. Fall back to iCal
     const icalUrl = process.env.GOOGLE_CALENDAR_ICAL_URL?.trim();
     if (icalUrl) {
       const events = await fetchViaIcal(icalUrl);
