@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getValidAccessToken } from "@/lib/google-calendar";
 import { adminClient } from "@/lib/supabase";
 import { OPERATOR } from "@/lib/config/operator";
+import staticCache from "@/lib/calendar-cache.json";
 
 export interface CalEvent {
   id: string;
@@ -143,6 +144,17 @@ export async function GET() {
     if (icalUrl) {
       const events = await fetchViaIcal(icalUrl);
       return NextResponse.json({ events, source: "ical" });
+    }
+
+    // 4. Fall back to static JSON baked into the build
+    const { todayStart, weekEnd } = dateWindow();
+    const staticEvents = (staticCache.events as CalEvent[]).filter((ev) => {
+      const start = new Date(ev.start);
+      const end = new Date(ev.end);
+      return end >= todayStart && start <= weekEnd;
+    });
+    if (staticEvents.length > 0) {
+      return NextResponse.json({ events: staticEvents, source: "static" });
     }
 
     return NextResponse.json({ events: [] });
