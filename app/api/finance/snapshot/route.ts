@@ -11,73 +11,67 @@ async function getSheetData(): Promise<string> {
     scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
   });
   const sheets = google.sheets({ version: "v4", auth });
-  const sheetId = process.env.GOOGLE_SHEETS_FINANCE_ID!;
   const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: sheetId,
+    spreadsheetId: process.env.GOOGLE_SHEETS_FINANCE_ID!,
     range: "A1:Z200",
   });
-  const rows = res.data.values ?? [];
-  return rows.map((r) => r.join("\t")).join("\n");
+  return (res.data.values ?? []).map(r => r.join("\t")).join("\n");
 }
 
 export async function GET(req: NextRequest) {
-  // Auth: cron secret or API secret
   const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  const apiSecret = process.env.API_SECRET;
   const incomingSecret = authHeader?.replace("Bearer ", "") ?? req.headers.get("x-api-secret");
-
-  if (incomingSecret !== cronSecret && incomingSecret !== apiSecret) {
+  if (incomingSecret !== process.env.CRON_SECRET && incomingSecret !== process.env.API_SECRET) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
     const rawData = await getSheetData();
-
     const client = new Anthropic();
     const msg = await client.messages.create({
       model: process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      system: `You are a financial analyst assistant. Given raw Google Sheets finance data, extract a concise snapshot. Respond with JSON only:
+      max_tokens: 1500,
+      system: `You are a financial analyst. Given raw Google Sheets data, extract a full financial snapshot. Respond with JSON only:
 {
   "net_worth": number,
+  "liquid": number,
+  "invested": number,
+  "liabilities": number,
   "monthly_income": number,
   "monthly_expenses": number,
   "savings_rate": number,
+  "runway_months": number,
+  "accounts": {
+    "checking": number, "savings": number, "hysa": number,
+    "equities": number, "index": number, "crypto": number, "private": number, "stables": number,
+    "cc_float": number, "car_lease": number, "loc": number, "tax_accrual": number
+  },
   "top_expense_categories": [{"name": string, "amount": number}],
   "summary": "2-3 sentence narrative",
-  "alerts": ["any important observations"]
+  "alerts": ["observations"]
 }`,
-      messages: [
-        {
-          role: "user",
-          content: `Finance sheet data:\n${rawData.slice(0, 8000)}`,
-        },
-      ],
+      messages: [{ role: "user", content: `Finance data:\n${rawData.slice(0, 8000)}` }],
     });
 
     const raw = msg.content[0].type === "text" ? msg.content[0].text : "{}";
     const snapshot = JSON.parse(raw.replace(/```json?|```/g, "").trim());
-
-    const db = adminClient();
     const today = new Date().toISOString().split("T")[0];
+    const db = adminClient();
+
+    const existing = await db
+      .from("daily_logs")
+      .select("notes")
+      .eq("user_id", OPERATOR.userId)
+      .eq("log_date", today)
+      .maybeSingle();
+
+    const currentNotes = existing.data?.notes ? JSON.parse(existing.data.notes as string) : {};
+    const merged = { ...currentNotes, finance_snapshot: snapshot };
 
     await db.from("daily_logs").upsert(
-      {
-        user_id: OPERATOR.userId,
-        log_date: today,
-        notes: { finance_snapshot: snapshot },
-      },
-      { onConflict: "user_id,log_date", ignoreDuplicates: false }
+      { user_id: OPERATOR.userId, log_date: today, notes: JSON.stringify(merged) },
+      { onConflict: "user_id,log_date" }
     );
-
-    await db.from("audit_log").insert({
-      user_id: OPERATOR.userId,
-      action: "finance_snapshot",
-      resource_type: "daily_log",
-      resource_id: today,
-      metadata: { snapshot },
-    });
 
     return NextResponse.json({ ok: true, date: today, snapshot });
   } catch (e) {

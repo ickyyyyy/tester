@@ -8,6 +8,7 @@ export async function GET() {
     .from("entities")
     .select("*")
     .eq("user_id", OPERATOR.userId)
+    .order("priority", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -16,9 +17,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  if (!body.name?.trim()) {
-    return NextResponse.json({ error: "Name required" }, { status: 400 });
-  }
+  if (!body.name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });
 
   const db = adminClient();
   const { data, error } = await db
@@ -26,9 +25,12 @@ export async function POST(req: NextRequest) {
     .insert({
       user_id: OPERATOR.userId,
       name: body.name,
+      kind: body.type ?? "person",
       type: body.type ?? "person",
       status: body.status ?? "lead",
       tags: body.tags ?? [],
+      priority: body.priority ?? "p5",
+      temperature: body.temperature ?? "warm",
       notes: body.notes ?? null,
     })
     .select()

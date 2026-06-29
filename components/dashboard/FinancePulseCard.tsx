@@ -3,54 +3,46 @@
 import { Panel } from "./Panel";
 
 interface FinanceSnapshot {
-  net_worth: number;
-  currency: string;
-  as_of: string;
-  categories: { name: string; value: number }[];
+  net_worth?: number;
+  monthly_income?: number;
+  monthly_expenses?: number;
+  savings_rate?: number;
+  summary?: string;
+  [key: string]: unknown;
 }
 
 export function FinancePulseCard({ data }: { data?: FinanceSnapshot | null }) {
-  if (!data) {
-    return (
-      <Panel title="Finance Pulse">
-        <p className="text-xs" style={{ color: "var(--ink-3)" }}>
-          No snapshot yet — run a refresh or wait for the daily cron.
-        </p>
-      </Panel>
-    );
-  }
-
   const fmt = (n: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: data.currency,
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(n);
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 }).format(n);
+
+  const nw = data?.net_worth;
+  const income = data?.monthly_income;
+  const expenses = data?.monthly_expenses;
+  const rate = data?.savings_rate;
 
   return (
-    <Panel title="Finance Pulse">
-      <div className="flex items-baseline gap-2">
-        <span className="num text-2xl font-bold" style={{ color: "var(--ok)" }}>
-          {fmt(data.net_worth)}
-        </span>
-        <span className="text-xs" style={{ color: "var(--ink-3)" }}>
-          net worth
-        </span>
-      </div>
-      <ul className="flex flex-col gap-1">
-        {data.categories.slice(0, 5).map((c) => (
-          <li key={c.name} className="flex justify-between text-xs">
-            <span style={{ color: "var(--ink-3)" }}>{c.name}</span>
-            <span className="num" style={{ color: "var(--ink-4)" }}>
-              {fmt(c.value)}
-            </span>
-          </li>
+    <Panel>
+      <p className="text-[10px] text-[var(--ink-3)] uppercase tracking-wider mb-1">Net Worth · Live</p>
+      {nw != null ? (
+        <p className="num text-2xl font-bold text-[var(--ok)] mb-3">{fmt(nw)}</p>
+      ) : (
+        <p className="num text-2xl font-bold text-[var(--ink-2)] mb-3">—</p>
+      )}
+      <div className="flex flex-col gap-1.5">
+        {[
+          { label: "Income/mo", value: income != null ? fmt(income) : "—", color: "var(--ok)" },
+          { label: "Burn/mo",   value: expenses != null ? fmt(expenses) : "—", color: "var(--danger)" },
+          { label: "Save rate", value: rate != null ? `${rate.toFixed(1)}%` : "—", color: "var(--accent)" },
+        ].map(row => (
+          <div key={row.label} className="flex items-center justify-between">
+            <span className="text-[10px] text-[var(--ink-3)] uppercase tracking-wider">{row.label}</span>
+            <span className="num text-xs font-semibold" style={{ color: row.color }}>{row.value}</span>
+          </div>
         ))}
-      </ul>
-      <p className="text-[10px]" style={{ color: "var(--ink-3)" }}>
-        as of {data.as_of}
-      </p>
+      </div>
+      {!data && (
+        <p className="text-[10px] text-[var(--ink-3)] mt-3">No snapshot — connect Google Sheets or trigger cron.</p>
+      )}
     </Panel>
   );
 }

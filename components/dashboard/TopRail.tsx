@@ -11,6 +11,7 @@ const TABS = [
   { label: "Finance", href: "/finance" },
   { label: "Journal", href: "/journal" },
   { label: "Health",  href: "/health" },
+  { label: "Review",  href: "/review" },
 ];
 
 export function TopRail() {
