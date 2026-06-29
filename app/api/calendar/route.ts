@@ -11,7 +11,7 @@ export interface CalEvent {
 }
 
 export async function GET() {
-  const icalUrl = process.env.GOOGLE_CALENDAR_ICAL_URL;
+  const icalUrl = process.env.GOOGLE_CALENDAR_ICAL_URL?.trim();
   if (!icalUrl) return NextResponse.json({ events: [] });
 
   try {
@@ -38,9 +38,10 @@ export async function GET() {
     const comp = new ICAL.Component(ICAL.parse(text));
     const vevents = comp.getAllSubcomponents("vevent");
 
-    const now = new Date();
-    const weekEnd = new Date(now);
-    weekEnd.setDate(weekEnd.getDate() + 7);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(todayStart);
+    weekEnd.setDate(todayStart.getDate() + 7);
 
     const raw: CalEvent[] = [];
     for (const v of vevents) {
@@ -48,8 +49,8 @@ export async function GET() {
       const start = ev.startDate?.toJSDate();
       const end = ev.endDate?.toJSDate();
       if (!start) continue;
-      const s = start;
-      if (s < now || s > weekEnd) continue;
+      const eventEnd = end ?? start;
+      if (eventEnd < todayStart || start > weekEnd) continue;
       raw.push({
         id: ev.uid ?? String(Math.random()),
         title: ev.summary ?? "(No title)",
