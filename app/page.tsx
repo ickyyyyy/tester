@@ -86,12 +86,12 @@ export default async function HomePage() {
           <>
             <SessionCard tasks={sessionTasks} />
             <HabitTrackerCard />
+            <JournalCard />
             <CalendarCard />
           </>
         }
         right={
           <>
-            <JournalCard />
             <PrioritiesCard
               weekItems={goalsNotes.goals_week_items ?? []}
               monthItems={goalsNotes.goals_month_items ?? []}
