@@ -11,7 +11,7 @@ export function HomeShell({
   right: ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-[220px_1fr_220px] gap-3 p-4 min-h-[calc(100dvh-3rem)]">
+    <div className="grid grid-cols-[240px_1fr_240px] gap-3 p-4 min-h-[calc(100dvh-3rem)]">
       <div className="flex flex-col gap-3">{left}</div>
       <div className="flex flex-col gap-3">{center}</div>
       <div className="flex flex-col gap-3">{right}</div>

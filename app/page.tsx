@@ -1,7 +1,7 @@
 import { HomeShell } from "@/components/dashboard/Shell";
 import { OperatorCard } from "@/components/dashboard/OperatorCard";
 import { FinancePulseCard } from "@/components/dashboard/FinancePulseCard";
-import { KeyBlockersCard } from "@/components/dashboard/KeyBlockersCard";
+import { TodayKeyCard } from "@/components/dashboard/TodayKeyCard";
 import { SessionCard } from "@/components/dashboard/SessionCard";
 import { HabitTrackerCard } from "@/components/dashboard/HabitTrackerCard";
 import { PrioritiesCard } from "@/components/dashboard/PrioritiesCard";
@@ -60,16 +60,16 @@ export default async function HomePage() {
   const { tasks, goalsNotes, finance } = await getData();
 
   const sessionTasks = tasks.filter((t) => t.urgency === "today" && t.key).slice(0, 3);
-  const blockers = tasks
-    .filter((t) => t.is_blocker || (t.urgency === "today" && !t.key))
+  const todayTasks = tasks
+    .filter((t) => t.urgency === "today")
     .map(t => ({
       id: t.id,
       title: t.title,
       temperature: t.temperature ?? "warm",
-      owner: t.owner ?? undefined,
-      stuck_since: t.stuck_since ?? undefined,
+      time_estimate_min: t.time_estimate_min ?? null,
+      urgency: t.urgency,
     }))
-    .slice(0, 7);
+    .slice(0, 8);
 
   return (
     <>
@@ -78,7 +78,7 @@ export default async function HomePage() {
           <>
             <OperatorCard />
             <FinancePulseCard data={finance} />
-            <KeyBlockersCard tasks={blockers} />
+            <TodayKeyCard tasks={todayTasks} />
           </>
         }
         center={
@@ -86,14 +86,14 @@ export default async function HomePage() {
             <SessionCard tasks={sessionTasks} />
             <HabitTrackerCard />
             <CalendarCard />
-            <PrioritiesCard
-              weekItems={goalsNotes.goals_week_items ?? []}
-              monthItems={goalsNotes.goals_month_items ?? []}
-            />
           </>
         }
         right={
           <>
+            <PrioritiesCard
+              weekItems={goalsNotes.goals_week_items ?? []}
+              monthItems={goalsNotes.goals_month_items ?? []}
+            />
             <NutritionCard />
           </>
         }

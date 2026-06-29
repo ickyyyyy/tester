@@ -12,81 +12,118 @@ interface CalEvent {
   location?: string;
 }
 
-const TAG_COLORS = [
-  "var(--accent)", "var(--ok)", "var(--warn)", "var(--danger)", "var(--ink-3)",
-];
-
-function tagColor(title: string) {
-  let h = 0;
-  for (const c of title) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
-  return TAG_COLORS[h % TAG_COLORS.length];
+function getWeekDays(): Date[] {
+  const today = new Date();
+  const dow = today.getDay();
+  const mon = new Date(today);
+  mon.setDate(today.getDate() - ((dow + 6) % 7));
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    return d;
+  });
 }
 
-function fmtTime(iso: string, allDay: boolean) {
-  if (allDay) return "All day";
+function fmtTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-function dayLabel(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short" }).toUpperCase();
-}
+const DAY_LABELS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 export function CalendarCard() {
   const [events, setEvents] = useState<CalEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(new Date());
 
   useEffect(() => {
     fetch("/api/calendar")
       .then(r => r.ok ? r.json() : { events: [] })
-      .then(d => { setEvents(d.events ?? []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(d => setEvents(d.events ?? []))
+      .catch(() => {});
   }, []);
 
-  // Group by day
-  const byDay: Record<string, CalEvent[]> = {};
-  for (const ev of events) {
-    const key = ev.start.slice(0, 10);
-    byDay[key] = byDay[key] ?? [];
-    byDay[key].push(ev);
-  }
-  const days = Object.keys(byDay).sort().slice(0, 5);
-  const today = new Date().toISOString().slice(0, 10);
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const todayStr = now.toISOString().slice(0, 10);
+  const weekDays = getWeekDays();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const todayEvents = events
+    .filter(e => !e.allDay && e.start.slice(0, 10) === todayStr)
+    .sort((a, b) => a.start.localeCompare(b.start));
 
   return (
     <Panel>
-      <p className="text-[10px] text-[var(--ink-3)] uppercase tracking-wider mb-3">Calendar — Next 7 Days</p>
-
-      {loading ? (
-        <p className="text-xs text-[var(--ink-3)]">Loading…</p>
-      ) : days.length === 0 ? (
-        <p className="text-xs text-[var(--ink-3)]">
-          {process.env.NEXT_PUBLIC_APP_URL ? "No upcoming events." : "Set GOOGLE_CALENDAR_ICAL_URL to connect your calendar."}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {days.map(day => (
-            <div key={day}>
-              <p className={`text-[10px] font-semibold uppercase tracking-wider mb-1.5 ${day === today ? "text-[var(--accent)]" : "text-[var(--ink-3)]"}`}>
-                {day === today ? "Today · " : ""}{dayLabel(byDay[day][0].start)}
-              </p>
-              <div className="flex flex-col gap-1.5 pl-2 border-l-2" style={{ borderColor: day === today ? "var(--accent)" : "var(--ink-2)" }}>
-                {byDay[day].map(ev => (
-                  <div key={ev.id} className="flex items-start gap-2">
-                    <span className="num text-[10px] text-[var(--ink-3)] w-16 shrink-0 pt-0.5">
-                      {fmtTime(ev.start, ev.allDay)}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-[var(--ink-4)] truncate">{ev.title}</p>
-                      {ev.location && (
-                        <p className="text-[10px] text-[var(--ink-3)] truncate">{ev.location}</p>
-                      )}
-                    </div>
-                    <span className="w-1.5 h-1.5 rounded-full mt-1 shrink-0" style={{ background: tagColor(ev.title) }} />
-                  </div>
-                ))}
-              </div>
+      {/* Week strip */}
+      <div className="grid grid-cols-7 gap-1 mb-3">
+        {weekDays.map((d, i) => {
+          const isToday = d.toISOString().slice(0, 10) === todayStr;
+          return (
+            <div key={i} className="flex flex-col items-center gap-0.5">
+              <span
+                className="text-[9px] font-bold uppercase tracking-wider"
+                style={{ color: isToday ? "var(--accent)" : "var(--ink-3)" }}
+              >
+                {DAY_LABELS[i]}
+              </span>
+              <span
+                className="num w-6 h-6 rounded flex items-center justify-center text-[11px] font-bold"
+                style={{
+                  background: isToday ? "var(--accent)" : "transparent",
+                  color: isToday ? "var(--ink-0)" : "var(--ink-3)",
+                  border: isToday ? "none" : "1px solid transparent",
+                }}
+              >
+                {d.getDate()}
+              </span>
             </div>
-          ))}
+          );
+        })}
+      </div>
+
+      {/* Today timeline */}
+      <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: "var(--ink-3)" }}>Today</p>
+      {todayEvents.length === 0 ? (
+        <p className="text-xs" style={{ color: "var(--ink-3)" }}>No events today.</p>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          {todayEvents.map(ev => {
+            const evMin = new Date(ev.start).getHours() * 60 + new Date(ev.start).getMinutes();
+            const isPast = evMin < nowMinutes;
+            const isNext = !isPast && todayEvents.findIndex(e => new Date(e.start).getHours() * 60 + new Date(e.start).getMinutes() >= nowMinutes) === todayEvents.indexOf(ev);
+            return (
+              <div key={ev.id} className="flex items-start gap-2">
+                <span
+                  className="num text-[10px] shrink-0 w-10 pt-0.5"
+                  style={{ color: isPast ? "var(--ink-3)" : "var(--ink-4)" }}
+                >
+                  {fmtTime(ev.start)}
+                </span>
+                {isNext && (
+                  <span className="text-[9px] font-bold shrink-0 mt-0.5" style={{ color: "var(--accent)" }}>▶</span>
+                )}
+                <p
+                  className="text-xs flex-1 truncate"
+                  style={{
+                    color: isPast ? "var(--ink-3)" : "var(--ink-4)",
+                    textDecoration: isPast ? "line-through" : "none",
+                  }}
+                >
+                  {ev.title}
+                </p>
+              </div>
+            );
+          })}
+          {/* NOW line */}
+          <div className="flex items-center gap-2 mt-1">
+            <span className="num text-[9px] font-bold" style={{ color: "var(--accent)" }}>NOW</span>
+            <div className="flex-1 h-px" style={{ background: "var(--accent)", opacity: 0.4 }} />
+            <span className="num text-[9px]" style={{ color: "var(--accent)" }}>
+              {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          </div>
         </div>
       )}
     </Panel>

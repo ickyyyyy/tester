@@ -27,7 +27,6 @@ export function PrioritiesCard({
     const next = scope === "week" ? [...wk, newItem] : [...mo, newItem];
     if (scope === "week") { setWk(next); setWkInput(""); }
     else { setMo(next); setMoInput(""); }
-
     await fetch("/api/goals", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -36,8 +35,7 @@ export function PrioritiesCard({
   }
 
   async function toggleGoal(scope: "week" | "month", id: string) {
-    const toggle = (items: GoalItem[]) =>
-      items.map((g) => (g.id === id ? { ...g, done: !g.done } : g));
+    const toggle = (items: GoalItem[]) => items.map(g => g.id === id ? { ...g, done: !g.done } : g);
     const next = scope === "week" ? toggle(wk) : toggle(mo);
     if (scope === "week") setWk(next); else setMo(next);
     await fetch("/api/goals", {
@@ -47,31 +45,24 @@ export function PrioritiesCard({
     }).catch(console.error);
   }
 
-  function GoalList({ scope, items, input, setInput }: {
+  function GoalSection({ scope, items, input, setInput }: {
     scope: "week" | "month";
     items: GoalItem[];
     input: string;
     setInput: (v: string) => void;
   }) {
     return (
-      <div className="flex flex-col gap-1.5">
-        <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--ink-3)" }}>
+      <div className="flex flex-col gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--ink-3)" }}>
           This {scope === "week" ? "Week" : "Month"}
         </p>
-        {items.map((g) => (
-          <button
-            key={g.id}
-            onClick={() => toggleGoal(scope, g.id)}
-            className="flex items-start gap-2 text-left"
-          >
-            <span
-              className="mt-0.5 text-xs"
-              style={{ color: g.done ? "var(--ok)" : "var(--ink-3)" }}
-            >
+        {items.map(g => (
+          <button key={g.id} onClick={() => toggleGoal(scope, g.id)} className="flex items-start gap-2 text-left">
+            <span className="text-xs mt-0.5" style={{ color: g.done ? "var(--ok)" : "var(--ink-3)" }}>
               {g.done ? "✓" : "○"}
             </span>
             <span
-              className="text-xs"
+              className="text-xs flex-1"
               style={{
                 color: g.done ? "var(--ink-3)" : "var(--ink-4)",
                 textDecoration: g.done ? "line-through" : "none",
@@ -82,26 +73,33 @@ export function PrioritiesCard({
           </button>
         ))}
         <form
-          onSubmit={(e) => { e.preventDefault(); addGoal(scope, input); }}
-          className="flex gap-1 mt-1"
+          onSubmit={e => { e.preventDefault(); addGoal(scope, input); }}
+          className="flex gap-2 mt-0.5"
         >
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Add goal…"
+            onChange={e => setInput(e.target.value)}
+            placeholder={`Add a ${scope === "week" ? "weekly" : "monthly"} goal…`}
             className="flex-1 rounded px-2 py-1 text-xs outline-none"
             style={{ background: "var(--ink-2)", color: "var(--ink-4)" }}
           />
+          <button
+            type="submit"
+            className="w-7 h-7 rounded flex items-center justify-center text-sm font-bold"
+            style={{ background: "var(--ink-2)", color: "var(--accent)" }}
+          >
+            +
+          </button>
         </form>
       </div>
     );
   }
 
   return (
-    <Panel title="Priorities">
-      <GoalList scope="week" items={wk} input={wkInput} setInput={setWkInput} />
+    <Panel title="Goals">
+      <GoalSection scope="week" items={wk} input={wkInput} setInput={setWkInput} />
       <hr style={{ borderColor: "var(--ink-2)" }} />
-      <GoalList scope="month" items={mo} input={moInput} setInput={setMoInput} />
+      <GoalSection scope="month" items={mo} input={moInput} setInput={setMoInput} />
     </Panel>
   );
 }

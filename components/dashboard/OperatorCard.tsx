@@ -6,41 +6,72 @@ import { OPERATOR } from "@/lib/config/operator";
 
 export function OperatorCard() {
   const [time, setTime] = useState("");
-  const [date, setDate] = useState("");
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     function tick() {
       const now = new Date();
-      setTime(now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: OPERATOR.timezone }));
-      setDate(now.toLocaleDateString("en-GB", { weekday: "long", month: "long", day: "numeric", timeZone: OPERATOR.timezone }));
+      setTime(now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: OPERATOR.timezone }));
     }
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
 
-  const utcOffset = (() => {
-    try {
-      const off = -new Date().getTimezoneOffset();
-      return `UTC${off >= 0 ? "+" : ""}${off / 60}`;
-    } catch { return "UTC"; }
-  })();
+  useEffect(() => {
+    fetch("/api/habits?days=60")
+      .then(r => r.ok ? r.json() : [])
+      .then((rows: { date: string; done: string[] }[]) => {
+        const sorted = [...rows].sort((a, b) => b.date.localeCompare(a.date));
+        let s = 0;
+        for (const row of sorted) {
+          if (row.done?.length > 0) s++; else break;
+        }
+        setStreak(s);
+      }).catch(() => {});
+  }, []);
 
   return (
     <Panel accent>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--ok)] animate-pulse" />
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--ok)]">Online</span>
+      {/* Avatar + status */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 border-2"
+          style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "var(--ink-1)" }}
+        >
+          {OPERATOR.name[0]}
         </div>
-        <span className="text-[10px] text-[var(--ink-3)] uppercase tracking-wider">{utcOffset}</span>
+        <div>
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--ok)" }} />
+            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--ok)" }}>Online</span>
+          </div>
+          <p className="text-base font-bold" style={{ color: "var(--ink-4)" }}>{OPERATOR.name}</p>
+          <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--ink-3)" }}>
+            {OPERATOR.role} · {OPERATOR.location}
+          </p>
+        </div>
       </div>
-      <p className="text-[10px] text-[var(--ink-3)] uppercase tracking-wider mb-0.5">
-        {OPERATOR.role} · {OPERATOR.location}
+
+      {/* Focus */}
+      <p
+        className="text-xs italic"
+        style={{ color: "var(--ink-3)", borderLeft: "2px solid var(--accent)", paddingLeft: "8px" }}
+      >
+        {OPERATOR.focus}
       </p>
-      <p className="text-base font-semibold text-[var(--ink-4)] mb-3">{OPERATOR.name}</p>
-      <p className="num text-2xl font-bold text-[var(--ink-4)] tracking-tight">{time}</p>
-      <p className="text-xs text-[var(--ink-3)] mt-0.5 uppercase tracking-wider">{date}</p>
+
+      {/* Time + streak */}
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="num text-2xl font-bold" style={{ color: "var(--ink-4)" }}>{time}</p>
+          <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--ink-3)" }}>{OPERATOR.timezone}</p>
+        </div>
+        <div className="text-right">
+          <p className="num text-2xl font-bold" style={{ color: "var(--accent)" }}>{streak}</p>
+          <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--ink-3)" }}>Day Streak</p>
+        </div>
+      </div>
     </Panel>
   );
 }
