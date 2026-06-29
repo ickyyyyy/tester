@@ -46,6 +46,7 @@ export function NutritionCard() {
   async function addMeal() {
     if (!input.trim()) return;
     setLoading(true);
+    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     try {
       const res = await fetch("/api/nutrition/estimate", {
         method: "POST",
@@ -53,13 +54,14 @@ export function NutritionCard() {
         body: JSON.stringify({ text: input }),
       });
       const est: { kcal: number; p: number; c: number; f: number } = await res.json();
-      const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       const meal: Meal = { id: crypto.randomUUID(), t: now, n: input, estimated: true, ...est };
       save([...meals, meal]);
-      setInput("");
-    } catch (e) {
-      console.error("Estimate failed", e);
+    } catch {
+      // Save with zero macros if AI estimation fails
+      const meal: Meal = { id: crypto.randomUUID(), t: now, n: input, estimated: false, kcal: 0, p: 0, c: 0, f: 0 };
+      save([...meals, meal]);
     } finally {
+      setInput("");
       setLoading(false);
     }
   }

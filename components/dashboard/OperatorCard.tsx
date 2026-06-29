@@ -62,7 +62,7 @@ export function OperatorCard() {
           </div>
           <p className="text-base font-bold" style={{ color: "var(--ink-4)" }}>{OPERATOR.name}</p>
           <p className="text-[10px] uppercase tracking-wider" style={{ color: "var(--ink-3)" }}>
-            {OPERATOR.role} · {OPERATOR.location}
+            {OPERATOR.role}
           </p>
         </div>
       </div>

@@ -15,6 +15,9 @@ export async function POST(req: NextRequest) {
   // 1. Classify
   const classification = await classifyCapture(text);
 
+  // Journal-sourced entries always route to journal regardless of AI classification
+  const routedTo = source === "journal" ? "journal" : classification.kind;
+
   // 2. Write raw capture
   const { data: capture, error: captureErr } = await db
     .from("raw_captures")
@@ -24,7 +27,7 @@ export async function POST(req: NextRequest) {
       raw_text: text,
       classification,
       llm_source: "anthropic",
-      routed_to: classification.kind,
+      routed_to: routedTo,
     })
     .select()
     .single();
@@ -36,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   // 3. Route to downstream table
   let routedId: string | null = null;
-  if (classification.kind === "task") {
+  if (routedTo === "task") {
     const { data: task } = await db
       .from("tasks")
       .insert({
@@ -68,7 +71,7 @@ export async function POST(req: NextRequest) {
     action: "capture",
     resource_type: classification.kind,
     resource_id: routedId ?? capture.id,
-    metadata: { source, classification },
+    metadata: { source, classification, routed_to: routedTo },
   });
 
   return NextResponse.json({
