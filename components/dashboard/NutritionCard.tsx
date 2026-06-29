@@ -47,23 +47,22 @@ export function NutritionCard() {
     if (!input.trim()) return;
     setLoading(true);
     const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    let est = { kcal: 0, p: 0, c: 0, f: 0 };
     try {
       const res = await fetch("/api/nutrition/estimate", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ text: input }),
       });
-      const est: { kcal: number; p: number; c: number; f: number } = await res.json();
-      const meal: Meal = { id: crypto.randomUUID(), t: now, n: input, estimated: true, ...est };
-      save([...meals, meal]);
-    } catch {
-      // Save with zero macros if AI estimation fails
-      const meal: Meal = { id: crypto.randomUUID(), t: now, n: input, estimated: false, kcal: 0, p: 0, c: 0, f: 0 };
-      save([...meals, meal]);
-    } finally {
-      setInput("");
-      setLoading(false);
-    }
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.kcal === "number") est = data;
+      }
+    } catch { /* estimation unavailable, use zeros */ }
+    const meal: Meal = { id: crypto.randomUUID(), t: now, n: input, estimated: est.kcal > 0, ...est };
+    save([...meals, meal]);
+    setInput("");
+    setLoading(false);
   }
 
   function removeMeal(id: string) {
