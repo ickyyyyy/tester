@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/* ── oklch design tokens ── */
+:root {
+  /* Neutral ink scale — dark mode first */
+  --ink-0: oklch(0.12 0.005 250);   /* deepest bg */
+  --ink-1: oklch(0.17 0.006 250);   /* card bg */
+  --ink-2: oklch(0.23 0.007 250);   /* elevated / border */
+  --ink-3: oklch(0.55 0.010 250);   /* muted text */
+  --ink-4: oklch(0.92 0.005 250);   /* primary text */
+
+  /* Accent — electric teal */
+  --accent:       oklch(0.72 0.18 195);
+  --accent-dim:   oklch(0.60 0.14 195);
+  --accent-glow:  oklch(0.72 0.18 195 / 0.15);
+
+  /* Semantic */
+  --ok:      oklch(0.68 0.16 145);
+  --warn:    oklch(0.78 0.16 75);
+  --danger:  oklch(0.62 0.20 25);
+
+  --background: var(--ink-0);
+  --foreground: var(--ink-4);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ink-0:      var(--ink-0);
+  --color-ink-1:      var(--ink-1);
+  --color-ink-2:      var(--ink-2);
+  --color-ink-3:      var(--ink-3);
+  --color-ink-4:      var(--ink-4);
+  --color-accent:     var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-ok:         var(--ok);
+  --color-warn:       var(--warn);
+  --color-danger:     var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { color-scheme: dark; }
+
+body {
+  background: var(--ink-0);
+  color: var(--ink-4);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glassmorphism card utility */
+.glass {
+  background: oklch(from var(--ink-1) l c h / 0.72);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid var(--ink-2);
+  border-radius: 0.75rem;
+}
+
+/* Monospace number rendering */
+.num {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ink-2); border-radius: 4px; }
