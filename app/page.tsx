@@ -7,6 +7,7 @@ import { HabitTrackerCard } from "@/components/dashboard/HabitTrackerCard";
 import { PrioritiesCard } from "@/components/dashboard/PrioritiesCard";
 import { NutritionCard } from "@/components/dashboard/NutritionCard";
 import { CalendarCard } from "@/components/dashboard/CalendarCard";
+import { JournalCard } from "@/components/dashboard/JournalCard";
 import { CaptureBox } from "@/components/dashboard/CaptureBox";
 import { adminClient } from "@/lib/supabase";
 import { OPERATOR } from "@/lib/config/operator";
@@ -90,6 +91,7 @@ export default async function HomePage() {
         }
         right={
           <>
+            <JournalCard />
             <PrioritiesCard
               weekItems={goalsNotes.goals_week_items ?? []}
               monthItems={goalsNotes.goals_month_items ?? []}

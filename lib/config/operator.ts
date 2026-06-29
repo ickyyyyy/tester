@@ -3,6 +3,6 @@ export const OPERATOR = {
   location: "Dubai",
   role: "Founder",
   focus: "Building an empire.",
-  timezone: process.env.USER_TIMEZONE ?? "UTC",
+  timezone: process.env.USER_TIMEZONE ?? "America/Chicago",
   userId: process.env.USER_ID ?? "me",
 };

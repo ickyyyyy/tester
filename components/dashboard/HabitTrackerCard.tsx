@@ -4,12 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import { Panel } from "./Panel";
 
 const HABITS = [
-  { name: "Gym",               category: "FITNESS",  sub: "",          target: null },
-  { name: "Supplements",       category: "HEALTH",   sub: "",          target: 3 },
-  { name: "Creative session",  category: "OUTPUT",   sub: "",          target: 7 },
-  { name: "Community session", category: "OPS",      sub: "",          target: 4 },
-  { name: "Finance check",     category: "OPS",      sub: "20-30 MIN", target: 5 },
-  { name: "Wind-down session", category: "EVENING",  sub: "",          target: 4 },
+  { name: "Gym",               category: "FITNESS",  sub: "" },
+  { name: "Supplements",       category: "HEALTH",   sub: "" },
+  { name: "Creative session",  category: "OUTPUT",   sub: "" },
+  { name: "Community session", category: "OPS",      sub: "" },
+  { name: "Finance check",     category: "OPS",      sub: "20-30 MIN" },
+  { name: "Wind-down session", category: "EVENING",  sub: "" },
 ];
 
 function localDateKey(): string {
@@ -71,18 +71,37 @@ export function HabitTrackerCard() {
             <button
               key={h.name}
               onClick={() => toggle(h.name)}
-              className="flex flex-col gap-1 p-2 rounded text-left transition-all"
+              className="flex flex-col gap-1.5 p-2 rounded text-left transition-all"
               style={{
                 background: checked ? "color-mix(in oklch, var(--ok) 12%, var(--ink-1))" : "var(--ink-1)",
                 border: `1px solid ${checked ? "color-mix(in oklch, var(--ok) 40%, transparent)" : "var(--ink-2)"}`,
               }}
             >
-              <span
-                className="text-[9px] font-bold uppercase tracking-widest leading-none"
-                style={{ color: checked ? "var(--ok)" : "var(--accent)" }}
-              >
-                {h.category}{h.sub ? ` · ${h.sub}` : ""}
-              </span>
+              {/* Category + circle */}
+              <div className="flex items-center justify-between gap-1">
+                <span
+                  className="text-[9px] font-bold uppercase tracking-widest leading-none"
+                  style={{ color: checked ? "var(--ok)" : "var(--accent)" }}
+                >
+                  {h.category}{h.sub ? ` · ${h.sub}` : ""}
+                </span>
+                {/* Clickable circle */}
+                <span
+                  className="w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 transition-all"
+                  style={{
+                    border: `1.5px solid ${checked ? "var(--ok)" : "var(--ink-3)"}`,
+                    background: checked ? "var(--ok)" : "transparent",
+                  }}
+                >
+                  {checked && (
+                    <svg width="7" height="7" viewBox="0 0 7 7" fill="none" stroke="var(--ink-0)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="1,3.5 2.8,5.5 6,1.5" />
+                    </svg>
+                  )}
+                </span>
+              </div>
+
+              {/* Habit name */}
               <span
                 className="text-[11px] font-medium leading-tight"
                 style={{
@@ -92,11 +111,6 @@ export function HabitTrackerCard() {
               >
                 {h.name}
               </span>
-              {h.target && (
-                <span className="num text-[9px]" style={{ color: "var(--ink-3)" }}>
-                  {checked ? h.target : 0}/{h.target}
-                </span>
-              )}
             </button>
           );
         })}
