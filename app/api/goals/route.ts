@@ -36,12 +36,10 @@ export async function POST(req: NextRequest) {
   if (scope === "week") notes.goals_week_items = items;
   else notes.goals_month_items = items;
 
-  const { error } = await db.from("daily_logs").upsert({
-    user_id: OPERATOR.userId,
-    log_date: SENTINEL,
-    notes: JSON.stringify(notes),
-    updated_at: new Date().toISOString(),
-  });
+  const { error } = await db.from("daily_logs").upsert(
+    { user_id: OPERATOR.userId, log_date: SENTINEL, notes: JSON.stringify(notes) },
+    { onConflict: "user_id,log_date" }
+  );
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
