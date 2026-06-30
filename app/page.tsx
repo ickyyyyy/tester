@@ -4,6 +4,7 @@ import { FinancePulseCard } from "@/components/dashboard/FinancePulseCard";
 import { TodayKeyCard } from "@/components/dashboard/TodayKeyCard";
 import { SessionCard } from "@/components/dashboard/SessionCard";
 import { HabitTrackerCard } from "@/components/dashboard/HabitTrackerCard";
+import { PrioritiesCard } from "@/components/dashboard/PrioritiesCard";
 import { NutritionCard } from "@/components/dashboard/NutritionCard";
 import { CalendarCard } from "@/components/dashboard/CalendarCard";
 import { JournalCard } from "@/components/dashboard/JournalCard";
@@ -65,6 +66,7 @@ export default async function HomePage() {
         }
         right={
           <>
+            <PrioritiesCard />
             <NutritionCard />
           </>
         }
