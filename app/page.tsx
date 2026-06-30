@@ -17,7 +17,7 @@ async function getData() {
     const db = adminClient();
     const userId = OPERATOR.userId;
 
-    const [tasksRes, goalsRes, financeRes] = await Promise.allSettled([
+    const [tasksRes, goalsRes] = await Promise.allSettled([
       db
         .from("tasks")
         .select("id,title,urgency,key,priority_score,time_estimate_min,temperature,stuck_since,is_blocker,owner")
@@ -31,14 +31,6 @@ async function getData() {
         .eq("user_id", userId)
         .eq("log_date", "2000-01-01")
         .maybeSingle(),
-      db
-        .from("daily_logs")
-        .select("notes")
-        .eq("user_id", userId)
-        .not("notes", "is", null)
-        .order("log_date", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
     ]);
 
     const tasks = tasksRes.status === "fulfilled" ? (tasksRes.value.data ?? []) : [];
@@ -46,19 +38,15 @@ async function getData() {
       goalsRes.status === "fulfilled" && goalsRes.value.data?.notes
         ? JSON.parse(goalsRes.value.data.notes as string)
         : {};
-    const financeNotes =
-      financeRes.status === "fulfilled" && financeRes.value.data?.notes
-        ? JSON.parse(financeRes.value.data.notes as string)
-        : {};
 
-    return { tasks, goalsNotes, finance: financeNotes.finance_snapshot ?? null };
+    return { tasks, goalsNotes };
   } catch {
     return { tasks: [], goalsNotes: {}, finance: null };
   }
 }
 
 export default async function HomePage() {
-  const { tasks, goalsNotes, finance } = await getData();
+  const { tasks, goalsNotes } = await getData();
 
   const sessionTasks = tasks.filter((t) => t.urgency === "today" && t.key).slice(0, 3);
   const todayTasks = tasks
@@ -78,7 +66,7 @@ export default async function HomePage() {
         left={
           <>
             <OperatorCard />
-            <FinancePulseCard data={finance} />
+            <FinancePulseCard />
             <TodayKeyCard tasks={todayTasks} />
           </>
         }

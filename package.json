@@ -3,39 +3,41 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-          "dev": "next dev",
-          "build": "next build",
-          "start": "next start",
-          "lint": "eslint"
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint"
     },
     "dependencies": {
-          "@anthropic-ai/sdk": "^0.106.0",
-          "@supabase/ssr": "^0.12.0",
-          "@supabase/supabase-js": "^2.108.2",
-          "exceljs": "^4.4.0",
-          "googleapis": "^173.0.0",
-          "grammy": "^1.44.0",
-          "ical.js": "^2.2.1",
-          "iron-session": "^8.0.4",
-          "jose": "^6.2.3",
-          "next": "16.2.9",
-          "openai": "^6.45.0",
-          "react": "19.2.4",
-          "react-dom": "19.2.4"
+        "@anthropic-ai/sdk": "^0.106.0",
+        "@supabase/ssr": "^0.12.0",
+        "@supabase/supabase-js": "^2.108.2",
+        "exceljs": "^4.4.0",
+        "googleapis": "^173.0.0",
+        "grammy": "^1.44.0",
+        "ical.js": "^2.2.1",
+        "iron-session": "^8.0.4",
+        "jose": "^6.2.3",
+        "next": "16.2.9",
+        "openai": "^6.45.0",
+        "plaid": "^42.2.0",
+        "react": "19.2.4",
+        "react-dom": "19.2.4",
+        "react-plaid-link": "^4.1.1"
     },
     "devDependencies": {
-          "@tailwindcss/postcss": "^4",
-          "@types/node": "^20",
-          "@types/react": "^19",
-          "@types/react-dom": "^19",
-          "eslint": "^9",
-          "eslint-config-next": "16.2.9",
-          "tailwindcss": "^4",
-          "typescript": "^5"
+        "@tailwindcss/postcss": "^4",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "eslint": "^9",
+        "eslint-config-next": "16.2.9",
+        "tailwindcss": "^4",
+        "typescript": "^5"
     },
     "overrides": {
-          "rimraf": "^4.0.0",
-          "glob": "^11.0.0",
-          "uuid": "^11.0.0"
+        "rimraf": "^4.0.0",
+        "glob": "^11.0.0",
+        "uuid": "^11.0.0"
     }
 }
