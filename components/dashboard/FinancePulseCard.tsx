@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Panel } from "./Panel";
-import { PlaidConnectButton } from "./PlaidConnectButton";
+const PlaidConnectButton = lazy(() => import("./PlaidConnectButton").then(m => ({ default: m.PlaidConnectButton })));
 import type { PlaidSnapshot } from "@/app/api/plaid/accounts/route";
 
 const FALLBACK_SPARK = [0.3, 0.38, 0.34, 0.50, 0.46, 0.60, 0.55, 0.68, 0.64, 0.78, 0.74, 0.90];
@@ -87,13 +87,13 @@ export function FinancePulseCard() {
       {!loading && !connected && (
         <div className="flex flex-col gap-2">
           <p className="text-[10px]" style={{ color: "var(--ink-3)" }}>Connect your accounts to see live balances.</p>
-          <PlaidConnectButton />
+          <Suspense fallback={null}><PlaidConnectButton /></Suspense>
         </div>
       )}
 
       {!loading && connected && (
         <div className="pt-1">
-          <PlaidConnectButton />
+          <Suspense fallback={null}><PlaidConnectButton /></Suspense>
         </div>
       )}
     </Panel>

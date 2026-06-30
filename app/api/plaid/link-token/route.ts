@@ -12,13 +12,14 @@ export async function POST() {
     const res = await plaidClient().linkTokenCreate({
       user: { client_user_id: OPERATOR.userId },
       client_name: "Landin OS",
-      products: [Products.Transactions, Products.Investments],
+      products: [Products.Transactions],
       country_codes: [CountryCode.Us],
       language: "en",
     });
     return NextResponse.json({ link_token: res.data.link_token });
-  } catch (e) {
-    console.error("Plaid link token error:", e);
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+  } catch (e: unknown) {
+    const msg = (e as { response?: { data?: unknown } })?.response?.data ?? String(e);
+    console.error("Plaid link token error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
