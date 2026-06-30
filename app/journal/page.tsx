@@ -136,11 +136,11 @@ export default function JournalPage() {
                     </span>
                     <button
                       onClick={() => deleteEntry(entry.id)}
-                      className="text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ color: "var(--danger)" }}
+                      className="text-xs font-bold px-1.5 py-0.5 rounded"
+                      style={{ color: "var(--danger)", background: "color-mix(in oklch, var(--danger) 12%, transparent)" }}
                       title="Delete entry"
                     >
-                      ×
+                      Delete
                     </button>
                   </div>
                   <span className="text-xs text-[var(--ink-3)]">
