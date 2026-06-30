@@ -10,6 +10,7 @@ const TABS = [
   { label: "BRAIN",   href: "/brain" },
   { label: "FINANCE", href: "/finance" },
   { label: "JOURNAL", href: "/journal" },
+  { label: "GOALS",   href: "/goals" },
   { label: "HEALTH",  href: "/health" },
   { label: "REVIEW",  href: "/review" },
 ];
