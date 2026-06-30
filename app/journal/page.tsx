@@ -28,6 +28,15 @@ export default function JournalPage() {
     setLoading(false);
   }, []);
 
+  async function deleteEntry(id: string) {
+    setEntries(prev => prev.filter(e => e.id !== id));
+    await fetch("/api/journal/entries", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+  }
+
   useEffect(() => { load(); }, [load]);
 
   async function save() {
@@ -98,7 +107,7 @@ export default function JournalPage() {
         <div className="space-y-3">
           {filtered.map((entry) => (
             <Panel key={entry.id} className="p-4">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-4 group">
                 <div className="flex-1">
                   <p className="text-sm text-[var(--ink-4)] leading-relaxed whitespace-pre-wrap">
                     {entry.raw_text}
@@ -114,16 +123,26 @@ export default function JournalPage() {
                     </div>
                   )}
                 </div>
-                <div className="shrink-0 flex flex-col items-end gap-1">
-                  <span
-                    className="text-xs px-2 py-0.5 rounded"
-                    style={{
-                      background: `color-mix(in oklch, ${kindColor[entry.classification?.kind ?? "capture"] ?? "var(--ink-3)"} 15%, transparent)`,
-                      color: kindColor[entry.classification?.kind ?? "capture"] ?? "var(--ink-3)",
-                    }}
-                  >
-                    {entry.classification?.kind ?? "capture"}
-                  </span>
+                <div className="shrink-0 flex flex-col items-end gap-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-xs px-2 py-0.5 rounded"
+                      style={{
+                        background: `color-mix(in oklch, ${kindColor[entry.classification?.kind ?? "capture"] ?? "var(--ink-3)"} 15%, transparent)`,
+                        color: kindColor[entry.classification?.kind ?? "capture"] ?? "var(--ink-3)",
+                      }}
+                    >
+                      {entry.classification?.kind ?? "capture"}
+                    </span>
+                    <button
+                      onClick={() => deleteEntry(entry.id)}
+                      className="text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ color: "var(--danger)" }}
+                      title="Delete entry"
+                    >
+                      ×
+                    </button>
+                  </div>
                   <span className="text-xs text-[var(--ink-3)]">
                     {new Date(entry.created_at).toLocaleDateString()}
                   </span>

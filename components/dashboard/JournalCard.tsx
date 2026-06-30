@@ -1,20 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Panel } from "./Panel";
 
-interface JournalEntry {
-  id: string;
-  raw_text: string;
-  classification: { summary: string; tags: string[]; kind?: string };
-  created_at: string;
-}
-
 export function JournalCard() {
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [compose, setCompose] = useState("");
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [listening, setListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
 
@@ -28,20 +19,6 @@ export function JournalCard() {
       !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
     );
   }, []);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/journal/entries");
-      if (res.ok) {
-        const data = await res.json();
-        setEntries(data.entries ?? []);
-      }
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
 
   function toggleVoice() {
     if (listening) {
@@ -102,19 +79,8 @@ export function JournalCard() {
         body: JSON.stringify({ text, source: "journal" }),
       });
       setCompose("");
-      load();
     } catch { /* ignore */ }
     finally { setSaving(false); }
-  }
-
-  function relativeTime(iso: string) {
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60_000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.floor(hrs / 24)}d ago`;
   }
 
   return (
@@ -173,35 +139,9 @@ export function JournalCard() {
         </button>
       </form>
 
-      {/* Entry feed */}
-      {loading ? (
-        <p className="text-xs" style={{ color: "var(--ink-3)" }}>Loading…</p>
-      ) : entries.length === 0 ? (
-        <p className="text-xs" style={{ color: "var(--ink-3)" }}>No entries yet — write or speak above.</p>
-      ) : (
-        <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-0.5">
-          {entries.slice(0, 12).map(e => (
-            <div key={e.id} className="flex flex-col gap-0.5 pb-2 border-b" style={{ borderColor: "var(--ink-2)" }}>
-              <p className="text-xs leading-snug" style={{ color: "var(--ink-4)" }}>
-                {e.raw_text.length > 100 ? e.raw_text.slice(0, 100) + "…" : e.raw_text}
-              </p>
-              <div className="flex items-center gap-2">
-                {e.classification?.kind && (
-                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--accent)" }}>
-                    {e.classification.kind}
-                  </span>
-                )}
-                <span className="text-[9px]" style={{ color: "var(--ink-3)" }}>{relativeTime(e.created_at)}</span>
-              </div>
-            </div>
-          ))}
-          {entries.length > 12 && (
-            <a href="/journal" className="text-[10px] text-center py-0.5" style={{ color: "var(--accent)" }}>
-              View all {entries.length} entries →
-            </a>
-          )}
-        </div>
-      )}
+      <a href="/journal" className="text-[10px]" style={{ color: "var(--accent)" }}>
+        View entries in Journal tab →
+      </a>
     </Panel>
   );
 }
